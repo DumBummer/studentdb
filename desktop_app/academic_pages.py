@@ -113,7 +113,20 @@ class EntityPage(QWidget):
         try:
             table, pk, fields, schema = repo.entity_fields(self.name)
             self.records = repo.rows(self.name)
-            populate(self.table, self.records, [pk] + fields)
+            if self.name == 'Teachers':
+                display_fields = [
+                    'teacher_id',
+                    'first_name',
+                    'last_name',
+                    'email',
+                    'department',
+                    'subject_description',
+                    'subject_id'
+                ]
+            else:
+                display_fields = [pk] + fields
+
+            populate(self.table, self.records, display_fields)
             self.info.setText(f'{len(self.records)} record(s)')
             self.status_callback(f'{self.name}: {len(self.records)} records loaded')
         except Exception as exc:

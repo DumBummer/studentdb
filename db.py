@@ -15,7 +15,7 @@ def get_db():
         port=os.getenv("DB_PORT", "5432"),
         dbname=os.getenv("DB_NAME", "CATUBIG_CSPC103"),
         user=os.getenv("DB_USER", "postgres"),
-        password=os.getenv("DB_PASSWORD", "0005"),
+        password=os.getenv("DB_PASSWORD", "root"),
         row_factory=dict_row
     )
 

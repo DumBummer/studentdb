@@ -43,6 +43,19 @@ class StudentDialog(QDialog):
                 edit.setReadOnly(True)
             form.addRow(label + ':', edit)
             self.fields[key] = edit
+            self.year_level = QComboBox()
+        self.year_level.addItems([
+            '1st Year',
+            '2nd Year',
+            '3rd Year',
+            '4th Year'
+        ])
+
+        self.year_level.setCurrentText(
+            str((record or {}).get('year_level') or '1st Year')
+        )
+
+        form.addRow('Year Level:', self.year_level)
         self.status = QComboBox()
         self.status.addItems(['Active', 'Inactive', 'Enrolled', 'Graduated'])
         existing_status = str((record or {}).get('status') or 'Active')
@@ -73,6 +86,7 @@ class StudentDialog(QDialog):
     def values(self):
         result = {key: field.text().strip() for key, field in self.fields.items()}
         result['status'] = self.status.currentText()
+        result['year_level'] = self.year_level.currentText()
         return result
 
 
@@ -96,8 +110,15 @@ class StudentsPage(QWidget):
         add.clicked.connect(self.add_record)
         tools.addWidget(add)
         root.addLayout(tools)
-        self.table = QTableWidget(0, 6)
-        self.table.setHorizontalHeaderLabels(['Student ID', 'First Name', 'Last Name', 'Email', 'Program', 'Status'])
+        self.table = QTableWidget(0, 7)
+        self.table.setHorizontalHeaderLabels(['Student ID',
+            'First Name',
+            'Last Name',
+            'Email',
+            'Program',
+            'Year Level',
+            'Status'
+            ])
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -199,21 +220,79 @@ def section_header(title, subtitle):
 
 
 class DashboardPage(QWidget):
-    def __init__(self):
+    def __init__(self, navigate_callback=None):
         super().__init__()
-        layout = QVBoxLayout(self)
-        layout.addWidget(section_header('SYSTEM DASHBOARD', 'Welcome to StudentDB Retro OS'))
-        self.count = QLabel('STUDENTS: —')
-        self.count.setObjectName('statLabel')
-        layout.addWidget(self.count)
-        layout.addWidget(QLabel('Choose Students from the sidebar to manage student records.'))
-        layout.addStretch()
+        self.navigate_callback = navigate_callback
+        root = QVBoxLayout(self)
+        root.setSpacing(12)
+        root.addWidget(section_header('SYSTEM DASHBOARD', 'StudentDB / Academic Control Center'))
+        stats = QGridLayout()
+        self.stat_labels = {}
+        for i, (name, table) in enumerate([('STUDENTS', 'student'), ('TEACHERS', 'teacher'),
+                                           ('SUBJECTS', 'subject'), ('ENROLLMENTS', 'enrollment')]):
+            card = QFrame()
+            card.setObjectName('panel')
+            content = QVBoxLayout(card)
+            heading = QLabel(name)
+            heading.setObjectName('subtitle')
+            content.addWidget(heading)
+            number = QLabel('—')
+            number.setObjectName('statLabel')
+            content.addWidget(number)
+            stats.addWidget(card, i // 2, i % 2)
+            self.stat_labels[table] = number
+        root.addLayout(stats)
+        quick = QFrame()
+        quick.setObjectName('panel')
+        quick_layout = QVBoxLayout(quick)
+        quick_layout.addWidget(QLabel('QUICK ACCESS'))
+        buttons = QHBoxLayout()
+        for name, index in [('Students', 1), ('Teachers', 2), ('Subjects', 3),
+                            ('Class Offerings', 4), ('Enrollments', 5)]:
+            button = QPushButton(name)
+            button.clicked.connect(lambda checked=False, idx=index: self.open_page(idx))
+            buttons.addWidget(button)
+        quick_layout.addLayout(buttons)
+        root.addWidget(quick)
+        preview = QFrame()
+        preview.setObjectName('panel')
+        preview_layout = QVBoxLayout(preview)
+        preview_layout.addWidget(QLabel('STUDENT DIRECTORY / PREVIEW'))
+        self.recent_table = QTableWidget(0, 4)
+        self.recent_table.setHorizontalHeaderLabels(['Student ID', 'First Name', 'Last Name', 'Program'])
+        self.recent_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.recent_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.recent_table.verticalHeader().setVisible(False)
+        preview_layout.addWidget(self.recent_table)
+        root.addWidget(preview, 1)
+        self.connection_label = QLabel('DATABASE STATUS: Not checked')
+        root.addWidget(self.connection_label)
+
+    def open_page(self, index):
+        if self.navigate_callback:
+            self.navigate_callback(index)
 
     def refresh(self):
+        from db import get_db
         try:
-            self.count.setText(f'STUDENTS: {repository.student_count()}')
-        except Exception:
-            self.count.setText('STUDENTS: Database unavailable')
+            with get_db() as conn, conn.cursor() as cur:
+                for table, label in self.stat_labels.items():
+                    cur.execute(f'SELECT COUNT(*) AS total FROM {table}')
+                    label.setText(str(cur.fetchone()['total']))
+                cur.execute('SELECT student_id, first_name, last_name, program FROM student ORDER BY student_id DESC LIMIT 8')
+                students = cur.fetchall()
+                self.recent_table.setRowCount(len(students))
+                for i, student in enumerate(students):
+                    for j, key in enumerate(('student_id', 'first_name', 'last_name', 'program')):
+                        self.recent_table.setItem(i, j, QTableWidgetItem(str(student.get(key) or '')))
+                cur.execute('SELECT current_database() AS db, inet_server_port() AS port')
+                info = cur.fetchone()
+                self.connection_label.setText(f"DATABASE STATUS: CONNECTED | {info['db']} | Port {info['port']}")
+        except Exception as exc:
+            self.connection_label.setText(f'DATABASE STATUS: UNAVAILABLE — {exc}')
+            for label in self.stat_labels.values():
+                label.setText('—')
+            self.recent_table.setRowCount(0)
 
 
 class PlaceholderPage(QWidget):
@@ -250,7 +329,7 @@ class MainWindow(QMainWindow):
         side.addWidget(QLabel('◈  MAIN MENU'))
         self.nav_buttons = []
         self.pages = QStackedWidget()
-        self.dashboard = DashboardPage()
+        self.dashboard = DashboardPage(self.navigate)
         self.students = StudentsPage(self.set_status)
         for index, (symbol, name) in enumerate(NAV_ITEMS):
             button = QPushButton(f'{symbol}   {name}')

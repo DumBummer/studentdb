@@ -48,8 +48,30 @@ def entity_fields(name):
 
 def rows(name):
     table, pk, _, _ = entity_fields(name)
+
     with get_db() as conn, conn.cursor() as cur:
-        cur.execute(f'SELECT * FROM {table} ORDER BY {pk} LIMIT 1000')
+
+        if name == 'Teachers':
+            cur.execute('''
+                SELECT
+                    t.teacher_id,
+                    t.first_name,
+                    t.last_name,
+                    t.email,
+                    t.department,
+                    t.subject_id,
+                    s.description AS subject_description
+                FROM teacher t
+                LEFT JOIN subject s
+                    ON t.subject_id = s.subject_id
+                ORDER BY t.teacher_id
+                LIMIT 1000
+            ''')
+        else:
+            cur.execute(
+                f'SELECT * FROM {table} ORDER BY {pk} LIMIT 1000'
+            )
+
         return cur.fetchall()
 
 
