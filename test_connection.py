@@ -11,7 +11,7 @@ try:
         port=os.getenv("DB_PORT", "5432"),
         dbname="postgres",
         user=os.getenv("DB_USER", "postgres"),
-        password=os.getenv("DB_PASSWORD", "0005")
+        password=os.getenv("DB_PASSWORD")
     ) as conn:
         with conn.cursor() as cur:
             cur.execute("""

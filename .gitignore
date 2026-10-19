@@ -1,5 +1,17 @@
+# Environment and credentials
+.env
 .venv/
 __pycache__/
 *.pyc
-.env
-.pytest_cache/
+
+# Temporary and backup files
+desktop_app_backup/
+StudentDB_Desktop_Complete_Tabs.zip
+
+# VS Code settings
+.vscode/
+
+# Build output
+build/
+dist/
+*.spec
