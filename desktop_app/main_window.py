@@ -14,6 +14,7 @@ from . import repository
 from .retro_tables import install_retro_table_style
 from .academic_pages import EntityPage, ScoresPage, GradesPage, show_error
 from .report_pages import ReportPage
+from .audit_page import AuditHistoryPage
 
 class RetroControlShadows(QObject):
     """Apply crisp arcade-style shadows to buttons and combo boxes, including dialogs."""
@@ -37,6 +38,7 @@ NAV_ITEMS = [
     ('▥', 'Grade Weights'), ('▥', 'Score Encoding'),
     ('▦', 'Grades & Transcripts'), ('▧', 'Overall Grades'),('▤', 'Class List'),
     ('▥', 'Class Grade Sheet'), ('▦', 'Student Grade Report'),
+    ('▣', 'Audit History'),
 ]
 
 
@@ -400,6 +402,8 @@ class MainWindow(QMainWindow):
                 page = ReportPage('grade_sheet', self.set_status)
             elif name == 'Student Grade Report':
                 page = ReportPage('student_report', self.set_status)
+            elif name == 'Audit History':
+                page = AuditHistoryPage(self.set_status)
             else:
                 page = EntityPage(name, self.set_status)
             # Apply table styling to each page when it is created.
