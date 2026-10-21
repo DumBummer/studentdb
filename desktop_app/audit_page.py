@@ -102,19 +102,30 @@ class AuditHistoryPage(QWidget):
     def show_details(self, *_):
         row = self.table.currentRow()
         if row < 0 or row >= len(self.records):
-            QMessageBox.information(self, 'Audit History', 'Select an audit record first.')
+            QMessageBox.information(
+                self, 'Audit History', 'Select an audit record first.'
+            )
             return
+
         record = self.records[row]
+
         dialog = QDialog(self)
-        dialog.setWindowTitle(f"Audit #{record['audit_id']} — {record['action']}")
+        dialog.setWindowTitle(
+            f"Audit #{record['audit_id']} — {record['action']}"
+        )
         dialog.resize(820, 620)
+
         layout = QVBoxLayout(dialog)
+
         layout.addWidget(QLabel(
-            f"Table: {record['table_name']}   |   Record: {record['record_id']}\n"
-            f"Action: {record['action']}   |   Timestamp: {record['changed_at']}"))
+            f"Table: {record['table_name']} | Record: {record['record_id']}\n"
+            f"Action: {record['action']} | Timestamp: {record['changed_at']}"
+        ))
+
         halves = QHBoxLayout()
+
         audit_text_style = """
-            QTextEdit, QPlainTextEdit {
+            QTextEdit {
                 background-color: #FFF8E7;
                 color: #28211C;
                 border: 3px solid #28211C;
@@ -126,18 +137,39 @@ class AuditHistoryPage(QWidget):
             }
         """
 
-        before_text.setStyleSheet(audit_text_style)
-        after_text.setStyleSheet(audit_text_style)
-        for title, value in [('BEFORE', record['old_data']), ('AFTER', record['new_data'])]:
+        for title, value in [
+            ('BEFORE', record['old_data']),
+            ('AFTER', record['new_data'])
+        ]:
             side = QVBoxLayout()
-            side.addWidget(QLabel(title))
+
+            label = QLabel(title)
+            side.addWidget(label)
+
             editor = QTextEdit()
             editor.setReadOnly(True)
             editor.setPlainText(pretty_json(value))
+
+            editor.setStyleSheet("""
+                QTextEdit {
+                    background-color: #FFF8E7;
+                    color: #28211C;
+                    border: 3px solid #28211C;
+                    padding: 10px;
+                    font-family: Consolas;
+                    font-size: 12px;
+                    selection-background-color: #247D80;
+                    selection-color: #FFFFFF;
+                }
+            """)
+
             side.addWidget(editor)
             halves.addLayout(side)
+
         layout.addLayout(halves)
+
         close = QPushButton('Close')
         close.clicked.connect(dialog.accept)
         layout.addWidget(close)
+
         dialog.exec()

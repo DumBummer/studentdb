@@ -6,7 +6,9 @@ import psycopg
 from psycopg.rows import dict_row
 from dotenv import load_dotenv
 
-load_dotenv()
+from pathlib import Path
+
+load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
 
 @contextmanager
 def get_db():
@@ -15,7 +17,7 @@ def get_db():
         port=os.getenv("DB_PORT", "5432"),
         dbname=os.getenv("DB_NAME", "CATUBIG_CSPC103"),
         user=os.getenv("DB_USER", "postgres"),
-        password=os.getenv("DB_PASSWORD", "root"),
+        password=os.getenv("DB_PASSWORD"),
         row_factory=dict_row
     )
 

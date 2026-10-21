@@ -1,17 +1,21 @@
-# Environment and credentials
+# Local database credentials
 .env
+.env.*
+!.env.example
+
+# Python virtual environment
 .venv/
+venv/
 __pycache__/
-*.pyc
+*.py[cod]
 
-# Temporary and backup files
-desktop_app_backup/
-StudentDB_Desktop_Complete_Tabs.zip
+# Database backups
+*.backup
+*.dump
+*.sql.gz
 
-# VS Code settings
+# Editor files
 .vscode/
 
-# Build output
-build/
-dist/
-*.spec
+StudentDB_Desktop_Complete_Tabs.zip
+desktop_app_backup/

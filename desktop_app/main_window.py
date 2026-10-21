@@ -348,7 +348,7 @@ class PlaceholderPage(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('StudentDB Retro OS — Desktop Edition')
+        self.setWindowTitle('NDMU Grading Management System — Desktop Edition')
         self.resize(1200, 760)
         self.setMinimumSize(920, 600)
         root = QWidget()
@@ -356,7 +356,7 @@ class MainWindow(QMainWindow):
         outer = QVBoxLayout(root)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.setSpacing(0)
-        banner = QLabel('▣  STUDENTDB RETRO OS                                      STUDENT INFORMATION & GRADING SYSTEM')
+        banner = QLabel('▣  NDMU                                      STUDENT INFORMATION & GRADING SYSTEM')
         banner.setObjectName('banner')
         outer.addWidget(banner)
         middle = QHBoxLayout()

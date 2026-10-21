@@ -1,4 +1,4 @@
-/* StudentDB Retro OS — classic beige + dark teal, inspired by supplied reference */
+/* NDMU — classic beige + dark teal, inspired by supplied reference */
 QWidget { font-family: 'Consolas', 'Segoe UI', monospace; font-size: 12px; color: #26291f; }
 QMainWindow, QDialog { background: #dcd4bf; }
 QFrame#sidebar { background: #c8c0ab; border: 2px solid #f6f0e2; border-right: 2px solid #7b796d; }
@@ -25,7 +25,7 @@ QDialog { border: 2px solid #807c70; }
 QMessageBox { background: #dcd4bf; }
 /* STUDENTDB — DROPDOWN / COMBOBOX FIX */
 
-/* StudentDB Retro OS — Combo Boxes */
+/* NDMU — Combo Boxes */
 
 QComboBox {
     background-color: #f7f3e8;
