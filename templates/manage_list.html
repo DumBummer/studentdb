@@ -1,1 +1,84 @@
-{% extends 'base.html' %}{% block heading %}{{kind|replace('_',' ')|title}}{% endblock %}{% block content %}<div class="pagehead"><h2>{{kind|title}} records</h2><a class="btn primary" href="{{url_for('manage_form',kind=kind)}}">＋ Add record</a></div><div class="panel tablewrap"><table><tr>{% for field,label,type in fields %}<th>{{label}}</th>{% endfor %}<th>Actions</th></tr>{% for row in rows %}<tr>{% for field,label,type in fields %}<td>{{row[field] if row[field] is not none else '—'}}</td>{% endfor %}<td><a href="{{url_for('manage_form',kind=kind,record_id=row[pk])}}">Edit</a> <form class="inline" method="post" action="{{url_for('manage_delete',kind=kind,record_id=row[pk])}}" onsubmit="return confirm('Delete record?')"><button class="link danger">Delete</button></form></td></tr>{% else %}<tr><td colspan="{{fields|length+1}}">No records yet.</td></tr>{% endfor %}</table></div>{% endblock %}
+
+{% extends 'base.html' %}
+
+{% block title %}{{ kind|replace('_', ' ')|title }}{% endblock %}
+{% block heading %}{{ kind|replace('_', ' ')|title }}{% endblock %}
+
+{% block content %}
+
+<div class="pagehead">
+    <div>
+        <h2>{{ kind|replace('_', ' ')|title }} Records</h2>
+        <p>Manage academic information stored in PostgreSQL.</p>
+    </div>
+
+    <a class="btn primary"
+       href="{{ url_for('manage_form', kind=kind) }}">
+        ＋ Add Record
+    </a>
+</div>
+
+<div class="panel">
+    <div class="tablewrap">
+        <table>
+            <thead>
+                <tr>
+                    {% for field, label, type in fields %}
+                        <th>{{ label }}</th>
+                    {% endfor %}
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    {% for field, label, type in fields %}
+                    <td>
+                        {{ row[field] if row[field] is not none else '—' }}
+                    </td>
+                    {% endfor %}
+
+                    <td>
+                        <a href="{{ url_for(
+                            'manage_form',
+                            kind=kind,
+                            record_id=row[pk]
+                        ) }}">
+                            Edit
+                        </a>
+
+                        <form class="inline"
+                              method="post"
+                              action="{{ url_for(
+                                  'manage_delete',
+                                  kind=kind,
+                                  record_id=row[pk]
+                              ) }}"
+                              onsubmit="return confirm('Delete this record? Related academic records may prevent deletion.');">
+
+                            <button class="link danger" type="submit">
+                                Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+
+                {% else %}
+                <tr>
+                    <td colspan="{{ fields|length + 1 }}"
+                        class="empty">
+                        No records yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="tablefoot">
+        {{ rows|length }} record(s)
+    </div>
+</div>
+
+{% endblock %}

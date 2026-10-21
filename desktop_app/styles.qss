@@ -1,0 +1,193 @@
+/* NDMU — classic beige + dark teal, inspired by supplied reference */
+QWidget { font-family: 'Consolas', 'Segoe UI', monospace; font-size: 12px; color: #26291f; }
+QMainWindow, QDialog { background: #dcd4bf; }
+QFrame#sidebar { background: #c8c0ab; border: 2px solid #f6f0e2; border-right: 2px solid #7b796d; }
+QFrame#content { background: #e9e2d2; border: 2px solid #807c70; }
+QFrame#panel { background: #dcd4bf; border: 2px solid #807c70; }
+QLabel#banner { background: #17433d; color: #f1e6cb; padding: 17px; font-size: 19px; font-weight: bold; }
+QLabel#footer { background: #17433d; color: #f1e6cb; padding: 8px; }
+QLabel#sectionTitle { background: #315e88; color: white; font-size: 16px; font-weight: bold; padding: 9px; }
+QLabel#subtitle { padding: 4px 7px; color: #494d43; }
+QLabel#statLabel { font-size: 25px; font-weight: bold; padding: 20px; background: #c8c0ab; border: 2px solid #807c70; }
+QPushButton { background: #c8c0ab; padding: 8px 12px; border-top: 2px solid #faf6e9; border-left: 2px solid #faf6e9; border-bottom: 2px solid #6f6b60; border-right: 2px solid #6f6b60; }
+QPushButton:hover { background: #e3dccb; }
+QPushButton:pressed { border-top: 2px solid #6f6b60; border-left: 2px solid #6f6b60; border-bottom: 2px solid #faf6e9; border-right: 2px solid #faf6e9; }
+QPushButton#primaryButton { background: #2b665e; color: white; font-weight: bold; }
+QPushButton#primaryButton:hover { background: #367c70; }
+QPushButton#dangerButton { color: #7d2525; }
+QPushButton#navButton { text-align: left; padding: 10px; }
+QPushButton#navButton:checked { background: #315e88; color: white; border-top: 2px solid #1a3b59; border-left: 2px solid #1a3b59; border-bottom: 2px solid #f6f0e2; border-right: 2px solid #f6f0e2; }
+QLineEdit, QComboBox { background: #f7f3e8; border: 2px solid #898579; padding: 7px; selection-background-color: #315e88; }
+QLineEdit:focus, QComboBox:focus { border: 2px solid #2b665e; }
+QTableWidget { background: #f7f3e8; alternate-background-color: #e9e2d2; gridline-color: #ada594; border: 2px solid #807c70; selection-background-color: #315e88; selection-color: white; }
+QHeaderView::section { background: #c8c0ab; color: #25251f; padding: 8px; border: 1px solid #807c70; font-weight: bold; }
+QDialog { border: 2px solid #807c70; }
+QMessageBox { background: #dcd4bf; }
+/* STUDENTDB — DROPDOWN / COMBOBOX FIX */
+
+/* NDMU — Combo Boxes */
+
+QComboBox {
+    background-color: #f7f3e8;
+    color: #26291f;
+    border: 2px solid #898579;
+    padding: 7px 12px;
+    min-height: 25px;
+}
+
+QComboBox:hover {
+    background-color: #e9e2d2;
+    border-color: #315e88;
+}
+
+QComboBox:focus {
+    border-color: #2b665e;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #f7f3e8;
+    color: #26291f;
+    selection-background-color: #315e88;
+    selection-color: #ffffff;
+    border: 2px solid #807c70;
+    outline: none;
+}
+
+QComboBox::drop-down {
+    background-color: #c8c0ab;
+    border-left: 2px solid #807c70;
+    width: 28px;
+}
+/* Retro usability improvements */
+QTableWidget { color: #26291f; selection-background-color: #315e88; selection-color: #ffffff; }
+QTableWidget::item { padding: 5px; }
+QTableWidget::item:selected { background: #315e88; color: white; }
+QLabel#connectionStatus { background: #c8d9ce; color: #17433d; padding: 9px; border: 1px solid #807c70; font-weight: bold; }
+QScrollBar:vertical { background: #dcd4bf; width: 13px; }
+QScrollBar::handle:vertical { background: #8f9b8d; min-height: 22px; border: 1px solid #686c61; }
+QScrollBar:horizontal { background: #dcd4bf; height: 13px; }
+QScrollBar::handle:horizontal { background: #8f9b8d; min-width: 22px; border: 1px solid #686c61; }
+QLineEdit:read-only { background: #e0dccf; color: #565a50; }
+
+/* Retro action palette */
+QPushButton { font-family: 'Consolas', monospace; font-weight: bold; min-height: 27px; }
+QPushButton#primaryButton { background: #95e766; color: #224d35; border: 2px outset #4b953a; }
+QPushButton#primaryButton:hover { background: #b5f48b; }
+QPushButton#saveButton { background: #12bde7; color: #124f67; border: 2px outset #08769d; }
+QPushButton#saveButton:hover { background: #60d7f3; }
+QPushButton#editButton { background: #ffb936; color: #70450c; border: 2px outset #bb7819; }
+QPushButton#editButton:hover { background: #ffd077; }
+QPushButton#dangerButton { background: #f36a77; color: #65252d; border: 2px outset #a93d4b; }
+QPushButton#dangerButton:hover { background: #ff919a; }
+QPushButton#navButton { font-family: 'Consolas', monospace; font-weight: bold; }
+
+/* ===== BROWSING-STYLE RETRO SIDEBAR ===== */
+QFrame#sidebar {
+    background-color: #e9e2d2;
+    border: 2px solid #29231e;
+}
+QPushButton#navButton {
+    background-color: #f4ecdc;
+    color: #211d18;
+    border: 3px solid #241f1b;
+    border-radius: 0px;
+    padding: 8px 9px;
+    min-height: 22px;
+    text-align: left;
+    font-family: 'Consolas';
+    font-size: 11px;
+    font-weight: 900;
+}
+QPushButton#navButton:hover:!checked {
+    background-color: #f9d68c;
+    color: #211d18;
+}
+QPushButton#navButton:pressed {
+    background-color: #e9a735;
+    padding-top: 10px;
+    padding-left: 11px;
+}
+QPushButton#navButton:checked {
+    background-color: #d82d35;
+    color: #ffffff;
+    border: 3px solid #241f1b;
+    border-bottom: 4px solid #8c151b;
+    font-weight: 900;
+}
+QPushButton#navButton:focus {
+    outline: none;
+}
+
+
+/* RETRO ARCADE CONTROLS — high contrast, hard outline and drop shadow via Qt */
+QPushButton {
+    font-family: 'Consolas'; font-size: 12px; font-weight: 900;
+    color: #211d18; background: #f4ecdc;
+    border: 3px solid #241f1b; border-radius: 0px;
+    padding: 7px 12px; min-height: 25px;
+}
+QPushButton:hover { background: #ffe06b; }
+QPushButton:pressed { background: #e6ba48; padding-top: 9px; padding-left: 14px; }
+QPushButton:disabled { color: #6e6b65; background: #d4d0c6; }
+QPushButton#primaryButton, QPushButton#addButton {
+    background: #d5f45a; color: #211d18;
+}
+QPushButton#primaryButton:hover, QPushButton#addButton:hover { background: #e8ff86; }
+QPushButton#saveButton, QPushButton#calculateButton {
+    background: #aef1ec; color: #211d18;
+}
+QPushButton#saveButton:hover, QPushButton#calculateButton:hover { background: #cbfff9; }
+QPushButton#editButton { background: #ffe06b; color: #211d18; }
+QPushButton#editButton:hover { background: #ffed9e; }
+QPushButton#dangerButton { background: #fa86b2; color: #211d18; }
+QPushButton#dangerButton:hover { background: #ffb1ce; }
+QPushButton#backButton { background: #d8b8f4; color: #211d18; }
+QPushButton#backButton:hover { background: #e8d1ff; }
+QPushButton#navButton { background: #f4ecdc; color: #211d18; text-align: left; }
+QPushButton#navButton:hover:!checked { background: #ffe06b; }
+QPushButton#navButton:checked { background: #d82d35; color: #ffffff; }
+QComboBox {
+    font-family: 'Consolas'; font-size: 12px; font-weight: bold;
+    background: #f4ecdc; color: #211d18;
+    border: 3px solid #241f1b; border-radius: 0px;
+    padding: 6px 10px; min-height: 25px;
+}
+QComboBox:hover { background: #fff7cb; }
+QComboBox:focus { border: 3px solid #241f1b; }
+QComboBox::drop-down {
+    width: 27px; background: #ffe06b;
+    border: 0px; border-left: 3px solid #241f1b;
+}
+QComboBox QAbstractItemView {
+    background: #fff9e9; color: #211d18;
+    selection-background-color: #d5f45a; selection-color: #211d18;
+    border: 2px solid #241f1b; outline: 0px;
+}
+
+/* FINAL RETRO TABLE TREATMENT */
+QTableWidget {
+    font-family: 'Consolas', 'Segoe UI', monospace;
+    font-size: 14px;
+    background: #fffaf0;
+    alternate-background-color: #f3ead7;
+    gridline-color: #c8bcaa;
+    border: 3px solid #241f1b;
+    selection-background-color: #d7f1e8;
+    selection-color: #1a2b2b;
+}
+QTableWidget::item { padding: 9px 7px; }
+QTableWidget::item:selected { background: #d7f1e8; color: #172f34; }
+QHeaderView::section { border: none; background: transparent; }
+QTableCornerButton::section { background: #241f1b; border: 1px solid #241f1b; }
+QScrollBar:horizontal, QScrollBar:vertical { background: #eee5d3; }
+
+QTableWidget {
+    font-family: "Consolas";
+    font-size: 14px;
+    background-color: #fffaf0;
+    alternate-background-color: #f1e8d5;
+    gridline-color: #c9bda8;
+    color: #241f1b;
+    selection-background-color: #b9e8df;
+    selection-color: #171b19;
+}

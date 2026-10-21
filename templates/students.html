@@ -1,1 +1,124 @@
-{% extends 'base.html' %}{% block title %}Students{% endblock %}{% block heading %}Students{% endblock %}{% block content %}<div class="pagehead"><div><h2>Student directory</h2><p>Manage student profiles and enrollment identities.</p></div><a class="btn primary" href="{{url_for('student_new')}}">＋ Add student</a></div><div class="panel"><form class="search" method="get"><span>⌕</span><input name="q" value="{{term}}" placeholder="Search by name, ID, or email…"><button class="btn">Search</button>{% if term %}<a href="{{url_for('students')}}">Clear</a>{% endif %}</form><div class="tablewrap"><table><thead><tr><th>Student</th><th>Student ID</th><th>Email</th><th>Program</th><th>Status</th><th>Actions</th></tr></thead><tbody>{% for s in rows %}<tr><td><strong>{{s.first_name}} {{s.last_name}}</strong></td><td class="muted">{{s.student_id}}</td><td>{{s.email or '—'}}</td><td>{{s.program or '—'}}</td><td><span class="pill">{{s.status}}</span></td><td><a href="{{url_for('student_edit',student_id=s.student_id)}}">Edit</a> <form class="inline" method="post" action="{{url_for('student_delete',student_id=s.student_id)}}" onsubmit="return confirm('Delete this student? Existing academic records may prevent deletion.');"><button class="link danger">Delete</button></form></td></tr>{% else %}<tr><td colspan="6" class="empty">No matching students found.</td></tr>{% endfor %}</tbody></table></div><div class="tablefoot">{{rows|length}} student record(s)</div></div>{% endblock %}
+
+{% extends 'base.html' %}
+
+{% block title %}Students{% endblock %}
+{% block heading %}Students{% endblock %}
+
+{% block content %}
+
+<div class="pagehead">
+    <div>
+        <h2>Student Directory</h2>
+        <p>Manage student profiles and enrollment identities.</p>
+    </div>
+
+    <a class="btn primary"
+       href="{{ url_for('student_new') }}">
+        ＋ Add Student
+    </a>
+</div>
+
+<div class="panel">
+
+    <form class="search" method="get">
+        <span>⌕</span>
+
+        <input
+            type="search"
+            name="q"
+            value="{{ term }}"
+            placeholder="Search by name, ID, or email…"
+        >
+
+        <button class="btn" type="submit">
+            Search
+        </button>
+
+        {% if term %}
+        <a href="{{ url_for('students') }}">
+            Clear
+        </a>
+        {% endif %}
+    </form>
+
+    <div class="tablewrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Student ID</th>
+                    <th>Email</th>
+                    <th>Program</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for s in rows %}
+                <tr>
+                    <td>
+                        <strong>
+                            {{ s.first_name }} {{ s.last_name }}
+                        </strong>
+                    </td>
+
+                    <td class="muted">
+                        {{ s.student_id }}
+                    </td>
+
+                    <td>
+                        {{ s.email or '—' }}
+                    </td>
+
+                    <td>
+                        {{ s.program or '—' }}
+                    </td>
+
+                    <td>
+                        <span class="pill">
+                            {{ s.status }}
+                        </span>
+                    </td>
+
+                    <td>
+                        <a href="{{ url_for(
+                            'student_edit',
+                            student_id=s.student_id
+                        ) }}">
+                            Edit
+                        </a>
+
+                        <form class="inline"
+                              method="post"
+                              action="{{ url_for(
+                                  'student_delete',
+                                  student_id=s.student_id
+                              ) }}"
+                              onsubmit="return confirm('Delete this student? Existing academic records may prevent deletion.');">
+
+                            <button class="link danger" type="submit">
+                                Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+
+                {% else %}
+                <tr>
+                    <td colspan="6" class="empty">
+                        No matching students found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="tablefoot">
+        {{ rows|length }} student record(s)
+    </div>
+
+</div>
+
+{% endblock %}

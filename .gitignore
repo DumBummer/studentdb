@@ -1,0 +1,21 @@
+# Local database credentials
+.env
+.env.*
+!.env.example
+
+# Python virtual environment
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Database backups
+*.backup
+*.dump
+*.sql.gz
+
+# Editor files
+.vscode/
+
+StudentDB_Desktop_Complete_Tabs.zip
+desktop_app_backup/
