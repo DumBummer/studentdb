@@ -6,10 +6,36 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import QDate
 from . import academic_repository as repo
+from psycopg import errors
+from .report_pages import ReportPage
 
 
 def show_error(parent, error):
-    QMessageBox.critical(parent, 'StudentDB / PostgreSQL', str(error))
+    if isinstance(error, errors.CheckViolation):
+        constraint = getattr(error.diag, "constraint_name", None)
+        message = (
+            "A value does not match the database rules.\n\n"
+            f"Failed constraint: {constraint or 'Unknown'}\n\n"
+            f"Details: {error}"
+        )
+
+    elif isinstance(error, errors.ForeignKeyViolation):
+        message = (
+            "This record is referenced by another record, "
+            "or the selected related record does not exist.\n\n"
+            f"Details: {error}"
+        )
+
+    elif isinstance(error, errors.UniqueViolation):
+        message = "This ID or another unique value already exists."
+
+    elif isinstance(error, ValueError):
+        message = str(error)
+
+    else:
+        message = str(error)
+
+    QMessageBox.critical(parent, "StudentDB — Database Error", message)
 
 
 def make_table():
@@ -18,7 +44,11 @@ def make_table():
     table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
     table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
     table.verticalHeader().setVisible(False)
-    table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+    table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+    table.horizontalHeader().setStretchLastSection(True)
+    table.setAlternatingRowColors(True)
+    table.setSortingEnabled(False)
+    table.setWordWrap(False)
     return table
 
 
@@ -30,6 +60,7 @@ def populate(table, records, fields=None):
     for i, row in enumerate(records):
         for j, field in enumerate(fields):
             table.setItem(i, j, QTableWidgetItem(str(row.get(field) if row.get(field) is not None else '')))
+    table.resizeColumnsToContents()
     table.resizeRowsToContents()
     return fields
 
@@ -37,6 +68,7 @@ def populate(table, records, fields=None):
 class RecordDialog(QDialog):
     def __init__(self, name, fields, schema, record=None, parent=None):
         super().__init__(parent)
+        self.name = name  # Identifies the module, such as Teachers
         self.setWindowTitle(('Edit ' if record else 'Add ') + name)
         self.setMinimumWidth(500)
         self.widgets = {}
@@ -44,6 +76,13 @@ class RecordDialog(QDialog):
         self.record = record or {}
         layout = QVBoxLayout(self)
         form = QFormLayout()
+        if name == 'Teachers':
+            teacher_id = QLineEdit(str(self.record.get('teacher_id') or ''))
+            teacher_id.setPlaceholderText('Enter Teacher ID')
+            teacher_id.setReadOnly(record is not None)
+            teacher_id.setToolTip('For UUID database columns, enter a valid UUID. Text columns can accept IDs like TCH-001.')
+            form.addRow('Teacher ID:', teacher_id)
+            self.widgets['teacher_id'] = teacher_id
         for field in fields:
             value = self.record.get(field)
             if field in repo.FOREIGN_KEYS:
@@ -65,9 +104,16 @@ class RecordDialog(QDialog):
             self.widgets[field] = widget
         layout.addLayout(form)
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
-        buttons.accepted.connect(self.accept)
+        buttons.button(QDialogButtonBox.StandardButton.Save).setObjectName('saveButton')
+        buttons.accepted.connect(self.validate_and_accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
+
+    def validate_and_accept(self):
+        if self.name == 'Teachers' and not self.widgets['teacher_id'].text().strip():
+            QMessageBox.warning(self, 'Teacher ID required', 'Please enter a Teacher ID.')
+            return
+        self.accept()
 
     def values(self):
         return {field: (widget.currentData() if isinstance(widget, QComboBox) else widget.text().strip())
@@ -88,7 +134,7 @@ class EntityPage(QWidget):
         actions = QHBoxLayout()
         for text, handler, style in [
             ('↻ Refresh', self.refresh, ''), ('+ Add', self.add_record, 'primaryButton'),
-            ('✎ Edit Selected', self.edit_record, ''), ('✕ Delete Selected', self.delete_record, 'dangerButton')
+            ('✎ Edit Selected', self.edit_record, 'editButton'), ('✕ Delete Selected', self.delete_record, 'dangerButton')
         ]:
             button = QPushButton(text)
             if style:
@@ -97,7 +143,6 @@ class EntityPage(QWidget):
             actions.addWidget(button)
         layout.addLayout(actions)
         self.table = make_table()
-        self.table.doubleClicked.connect(self.edit_record)
         layout.addWidget(self.table)
         self.info = QLabel('Ready')
         layout.addWidget(self.info)
@@ -127,6 +172,7 @@ class EntityPage(QWidget):
                 display_fields = [pk] + fields
 
             populate(self.table, self.records, display_fields)
+            self.table.setProperty('id_fields', display_fields)
             self.info.setText(f'{len(self.records)} record(s)')
             self.status_callback(f'{self.name}: {len(self.records)} records loaded')
         except Exception as exc:
@@ -193,6 +239,7 @@ class ScoreDialog(QDialog):
             form.addRow(field.replace('_', ' ').title(), widget)
         layout.addLayout(form)
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
+        buttons.button(QDialogButtonBox.StandardButton.Save).setObjectName('saveButton')
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
@@ -215,6 +262,8 @@ class ScoresPage(QWidget):
                              ('✓ Calculate Period Grade', self.calculate)]:
             button = QPushButton(text)
             button.clicked.connect(action)
+            if 'Encode' in text: button.setObjectName('primaryButton')
+            if 'Calculate' in text: button.setObjectName('saveButton')
             bar.addWidget(button)
         layout.addLayout(bar)
         self.table = make_table()
@@ -227,6 +276,7 @@ class ScoresPage(QWidget):
             records = repo.score_rows()
             fields = list(repo.score_schema())
             populate(self.table, records, fields)
+            self.table.setProperty('id_fields', fields)
             self.info.setText(f'{len(records)} encoded scores')
         except Exception as exc:
             show_error(self, exc)
@@ -277,7 +327,7 @@ class GradesPage(QWidget):
         title = QLabel('OVERALL GRADES' if overall else 'GRADES & TRANSCRIPTS')
         title.setObjectName('sectionTitle')
         layout.addWidget(title)
-        note = QLabel('Overall grade is the arithmetic mean of saved period grades.' if overall
+        note = QLabel('Overall percentage = Midterm × 40% + Finals × 60%. Missing periods remain pending.' if overall
                       else 'Saved final period grades from PostgreSQL.')
         layout.addWidget(note)
         button = QPushButton('↻ Refresh')
@@ -291,9 +341,10 @@ class GradesPage(QWidget):
     def refresh(self, *_):
         try:
             records = repo.overall_rows() if self.overall else repo.grade_rows()
-            fields = (['student_id', 'first_name', 'last_name', 'class_code', 'periods', 'overall_grade']
+            fields = (['student_id', 'first_name', 'last_name', 'class_code', 'midterm_percentage', 'finals_percentage', 'overall_percentage', 'final_equiv', 'remarks']
                       if self.overall else ['student_id', 'first_name', 'last_name', 'class_code', 'period_name', 'final_grade', 'remarks', 'date_encoded'])
             populate(self.table, records, fields)
+            self.table.setProperty('id_fields', fields)
             self.info.setText(f'{len(records)} record(s)')
         except Exception as exc:
             show_error(self, exc)
