@@ -1,1 +1,148 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{% block title %}StudentDB{% endblock %} · Student Management</title><link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}"></head><body><div class="layout"><aside class="sidebar"><a class="brand" href="{{ url_for('dashboard') }}"><b>S</b><span>Student<span class="teal">DB</span><small>ACADEMIC PORTAL</small></span></a><div class="navtitle">WORKSPACE</div><a class="nav {% if request.endpoint=='dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">▦ <span>Dashboard</span></a><a class="nav {% if request.endpoint in ['students','student_new','student_edit'] %}active{% endif %}" href="{{ url_for('students') }}">♙ <span>Students</span></a><a class="nav {% if request.endpoint=='grades' %}active{% endif %}" href="{{ url_for('grades') }}">▤ <span>Grades & transcripts</span></a><p class="nav-label">ACADEMIC DATA</p><a href="/manage/teachers">Teachers</a><a href="/manage/subjects">Subjects</a><a href="/manage/offerings">Offerings</a><a href="/manage/enrollments">Enrollments</a><a href="/manage/periods">Periods</a><a href="/manage/components">Components</a><a href="/manage/weights">Weights</a><a href="/scores">✎ Score encoding</a><div class="sidefoot"><i></i> PostgreSQL-backed<small>Student information system</small></div></aside><main><header><div><small>STUDENT INFORMATION SYSTEM</small><h1>{% block heading %}Dashboard{% endblock %}</h1></div><div class="admin"><b>AD</b><span>Administrator<small>Academic office</small></span></div></header>{% with messages=get_flashed_messages(with_categories=true) %}{% for kind,msg in messages %}<div class="flash {{kind}}">{{msg}}</div>{% endfor %}{% endwith %}<section>{% block content %}{% endblock %}</section><footer>StudentDB <span>·</span> Student Grade Management</footer></main></div></body></html>
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <title>
+        {% block title %}StudentDB{% endblock %}
+        · Student Management
+    </title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+<div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <a class="brand" href="{{ url_for('dashboard') }}">
+            <b>S</b>
+            <span>
+                Student<span class="teal">DB</span>
+                <small>ACADEMIC PORTAL</small>
+            </span>
+        </a>
+
+        <div class="navtitle">WORKSPACE</div>
+
+        <a class="nav {% if request.endpoint == 'dashboard' %}active{% endif %}"
+           href="{{ url_for('dashboard') }}">
+            ▦ <span>Dashboard</span>
+        </a>
+
+        <a class="nav {% if request.endpoint in ['students', 'student_new', 'student_edit'] %}active{% endif %}"
+           href="{{ url_for('students') }}">
+            ♙ <span>Students</span>
+        </a>
+
+        <a class="nav {% if request.endpoint == 'grades' %}active{% endif %}"
+           href="{{ url_for('grades') }}">
+            ▤ <span>Grades & Transcripts</span>
+        </a>
+
+        <!-- NEW: OVERALL GRADES -->
+        <a class="nav {% if request.endpoint == 'overall_grades' %}active{% endif %}"
+           href="{{ url_for('overall_grades') }}">
+            ◈ <span>Overall Subject Grades</span>
+        </a>
+
+        <p class="nav-label">ACADEMIC DATA</p>
+
+        <a class="nav" href="/manage/teachers">
+            ♙ <span>Teachers</span>
+        </a>
+
+        <a class="nav" href="/manage/subjects">
+            ▤ <span>Subjects</span>
+        </a>
+
+        <a class="nav" href="/manage/offerings">
+            ▦ <span>Class Offerings</span>
+        </a>
+
+        <a class="nav" href="/manage/enrollments">
+            ◉ <span>Enrollments</span>
+        </a>
+
+        <a class="nav" href="/manage/periods">
+            ◷ <span>Grading Periods</span>
+        </a>
+
+        <a class="nav" href="/manage/components">
+            ☷ <span>Grade Components</span>
+        </a>
+
+        <a class="nav" href="/manage/weights">
+            % <span>Grade Percentages</span>
+        </a>
+
+        <a class="nav {% if request.endpoint == 'scores' %}active{% endif %}"
+           href="{{ url_for('scores') }}">
+            ✎ <span>Score Encoding</span>
+        </a>
+
+        <div class="sidefoot">
+            <i></i>
+            PostgreSQL-backed
+            <small>Student information system</small>
+        </div>
+
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main>
+
+        <header>
+            <div>
+                <small>STUDENT INFORMATION SYSTEM</small>
+                <h1>
+                    {% block heading %}
+                        Dashboard
+                    {% endblock %}
+                </h1>
+            </div>
+
+            <div class="admin">
+                <b>AD</b>
+                <span>
+                    Administrator
+                    <small>Academic office</small>
+                </span>
+            </div>
+        </header>
+
+        <!-- FLASH MESSAGES -->
+        {% with messages = get_flashed_messages(
+            with_categories=true
+        ) %}
+
+            {% for kind, msg in messages %}
+                <div class="flash {{ kind }}">
+                    {{ msg }}
+                </div>
+            {% endfor %}
+
+        {% endwith %}
+
+        <!-- PAGE CONTENT -->
+        <section>
+            {% block content %}
+            {% endblock %}
+        </section>
+
+        <footer>
+            StudentDB
+            <span>·</span>
+            Student Grade Management
+        </footer>
+
+    </main>
+
+</div>
+</body>
+</html>

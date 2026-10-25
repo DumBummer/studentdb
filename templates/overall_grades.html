@@ -1,0 +1,212 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Overall Subject Grades | StudentDB</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 30px;
+            background: #f3f5f9;
+            color: #1e293b;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 25px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .button {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 11px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+
+        .button.secondary {
+            background: #475569;
+        }
+
+        .table-wrapper {
+            background: white;
+            border-radius: 12px;
+            overflow-x: auto;
+            box-shadow: 0 4px 15px #0000000d;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 850px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #eaf0ff;
+            color: #334155;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        .grade {
+            font-weight: bold;
+            color: #15803d;
+        }
+
+        .pending {
+            color: #b45309;
+            font-weight: bold;
+        }
+
+        .small {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .period-line {
+            margin: 4px 0;
+        }
+
+        .empty {
+            padding: 30px;
+            text-align: center;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <h1>Overall Subject Grades</h1>
+
+    <p class="subtitle">
+        StudentDB — Equal-weight average of saved grading periods
+    </p>
+
+    <div class="toolbar">
+        <a class="button secondary"
+           href="{{ url_for('grades') }}">
+            Back to Grades
+        </a>
+
+        <a class="button"
+           href="{{ url_for('scores') }}">
+            Score Encoding
+        </a>
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Student ID</th>
+                    <th>Student Name</th>
+                    <th>Subject</th>
+                    <th>Class</th>
+                    <th>Grading Periods</th>
+                    <th>Overall Grade</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for item in results %}
+                <tr>
+                    <td>{{ item.student_id }}</td>
+
+                    <td>{{ item.student_name }}</td>
+
+                    <td>
+                        {{ item.subject_code }}
+                        <div class="small">
+                            {{ item.subject_name }}
+                        </div>
+                    </td>
+
+                    <td>{{ item.class_code }}</td>
+
+                    <td>
+                        {% for grade in item.period_grades %}
+                        <div class="period-line">
+                            {{ grade.period_name }}:
+                            <strong>
+                                {{ "%.2f"|format(grade.final_grade) }}%
+                            </strong>
+                        </div>
+                        {% else %}
+                        <span class="pending">
+                            No grades recorded
+                        </span>
+                        {% endfor %}
+                    </td>
+
+                    <td>
+                        {% if item.overall_grade is not none %}
+                        <span class="grade">
+                            {{ "%.2f"|format(item.overall_grade) }}%
+                        </span>
+                        {% else %}
+                        <span class="pending">Pending</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if item.period_count == 0 %}
+                            <span class="pending">No Grades</span>
+                        {% else %}
+                            {{ item.period_count }}
+                            period(s) recorded
+                        {% endif %}
+                    </td>
+                </tr>
+
+                {% else %}
+                <tr>
+                    <td colspan="7" class="empty">
+                        No student enrollments found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+</body>
+</html>

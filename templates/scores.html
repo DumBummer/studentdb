@@ -1,1 +1,231 @@
-{% extends 'base.html' %}{% block heading %}Score encoding{% endblock %}{% block content %}<div class="pagehead"><h2>Enter component scores</h2></div><form class="panel form" method="post"><div class="fields"><label>Enrollment<select name="enrollment_id" required>{% for e in enrollments %}<option value="{{e.enrollment_id}}">{{e.label}}</option>{% endfor %}</select></label><label>Component<select name="component_id" required>{% for c in components %}<option value="{{c.component_id}}">{{c.name}} (max {{c.max_score}})</option>{% endfor %}</select></label><label>Grading period<select name="period_id" required>{% for p in periods %}<option value="{{p.period_id}}">{{p.name}}</option>{% endfor %}</select></label><label>Score<input name="score" type="number" min="0" step="0.01" required></label><label>Remarks<input name="remarks"></label></div><div class="formactions"><button class="btn primary">Save score</button></div></form><div class="panel tablewrap"><table><tr><th>Student</th><th>Component</th><th>Period</th><th>Score</th></tr>{% for r in rows %}<tr><td>{{r.first_name}} {{r.last_name}}</td><td>{{r.component_name}}</td><td>{{r.period_name}}</td><td>{{r.score}}</td></tr>{% endfor %}</table></div><div class="pagehead"><h2>Calculate final grade</h2></div><form class="panel form" method="post" action="{{url_for('calculate_grades')}}"><div class="fields"><label>Enrollment<select name="enrollment_id">{% for e in enrollments %}<option value="{{e.enrollment_id}}">{{e.label}}</option>{% endfor %}</select></label><label>Grading period<select name="period_id">{% for p in periods %}<option value="{{p.period_id}}">{{p.name}}</option>{% endfor %}</select></label></div><p>All weighted components must have scores, and weights must total 100%.</p><div class="formactions"><button class="btn primary">Calculate and save grade</button></div></form>{% endblock %}
+
+{% extends 'base.html' %}
+
+{% block heading %}
+    Score Encoding
+{% endblock %}
+
+{% block content %}
+
+<!-- SCORE ENCODING -->
+<div class="pagehead">
+    <div>
+        <h2>Enter Component Scores</h2>
+        <p>Record student scores for grading activities.</p>
+    </div>
+</div>
+
+<form class="panel form" method="post">
+
+    <div class="fields">
+
+        <!-- ENROLLMENT -->
+        <label for="enrollment_id">
+            Enrollment
+
+            <select
+                id="enrollment_id"
+                name="enrollment_id"
+                required
+            >
+                <option value="">Choose enrollment</option>
+
+                {% for e in enrollments %}
+                    <option value="{{ e.enrollment_id }}">
+                        {{ e.label }}
+                    </option>
+                {% endfor %}
+
+            </select>
+        </label>
+
+        <!-- GRADE COMPONENT -->
+        <label for="component_id">
+            Grade Component
+
+            <select
+                id="component_id"
+                name="component_id"
+                required
+            >
+                <option value="">Choose grading activity</option>
+
+                {% for c in components %}
+                    <option value="{{ c.component_id }}">
+                        {{ c.name }}
+                        (Maximum: {{ c.max_score }})
+                    </option>
+                {% endfor %}
+
+            </select>
+        </label>
+
+        <!-- SCORE -->
+        <label for="score">
+            Score Obtained
+
+            <input
+                id="score"
+                name="score"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Enter student score"
+                required
+            >
+        </label>
+
+        <!-- REMARKS -->
+        <label for="remarks">
+            Remarks
+
+            <input
+                id="remarks"
+                name="remarks"
+                type="text"
+                placeholder="Optional remarks"
+            >
+        </label>
+
+    </div>
+
+    <div class="formactions">
+        <button class="btn primary" type="submit">
+            Save Score
+        </button>
+    </div>
+
+</form>
+
+
+<!-- SCORE HISTORY -->
+<div class="pagehead">
+    <div>
+        <h2>Recorded Scores</h2>
+        <p>Previously encoded student scores.</p>
+    </div>
+</div>
+
+<div class="panel tablewrap">
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Component</th>
+                <th>Grading Period</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for r in rows %}
+
+                <tr>
+                    <td>
+                        {{ r.first_name }}
+                        {{ r.last_name }}
+                    </td>
+
+                    <td>{{ r.component_name }}</td>
+
+                    <td>{{ r.period_name }}</td>
+
+                    <td>{{ r.score }}</td>
+                </tr>
+
+            {% else %}
+
+                <tr>
+                    <td colspan="4">
+                        No scores recorded yet.
+                    </td>
+                </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+
+<!-- FINAL GRADE CALCULATOR -->
+<div class="pagehead">
+    <div>
+        <h2>Calculate Final Grade</h2>
+        <p>
+            Calculate grades using the configured
+            grading components and percentages.
+        </p>
+    </div>
+</div>
+
+<form
+    class="panel form"
+    method="post"
+    action="{{ url_for('calculate_grades') }}"
+>
+
+    <div class="fields">
+
+        <!-- ENROLLMENT -->
+        <label for="calculate_enrollment_id">
+            Enrollment
+
+            <select
+                id="calculate_enrollment_id"
+                name="enrollment_id"
+                required
+            >
+                <option value="">Choose enrollment</option>
+
+                {% for e in enrollments %}
+                    <option value="{{ e.enrollment_id }}">
+                        {{ e.label }}
+                    </option>
+                {% endfor %}
+
+            </select>
+        </label>
+
+        <!-- GRADING PERIOD -->
+        <label for="calculate_period_id">
+            Grading Period
+
+            <select
+                id="calculate_period_id"
+                name="period_id"
+                required
+            >
+                <option value="">Choose grading period</option>
+
+                {% for p in periods %}
+                    <option value="{{ p.period_id }}">
+                        {{ p.name }}
+                    </option>
+                {% endfor %}
+
+            </select>
+        </label>
+
+    </div>
+
+    <p>
+        All required grading components must have
+        recorded scores, and the configured grading
+        percentages must total 100%.
+    </p>
+
+    <div class="formactions">
+        <button class="btn primary" type="submit">
+            Calculate and Save Grade
+        </button>
+    </div>
+
+</form>
+
+{% endblock %}
