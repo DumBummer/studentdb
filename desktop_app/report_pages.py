@@ -25,9 +25,15 @@ class ReportPage(QWidget):
         heading.setObjectName('sectionTitle')
         root.addWidget(heading)
         tools = QHBoxLayout()
-        tools.addWidget(QLabel('Select student:' if report_type == 'student_report' else 'Select class:'))
+        tools.addWidget(QLabel('Teacher: ' if report_type == 'class_list' else ('Select student:' if report_type == 'student_report' else 'Select class:')))
+        self.teacher_selector = None
+        if report_type == 'class_list':
+            self.teacher_selector = QComboBox()
+            self.teacher_selector.setMinimumWidth(170)
+            tools.addWidget(self.teacher_selector, 1)
+            tools.addWidget(QLabel('Assigned subject / section:'))
         self.selector = QComboBox()
-        tools.addWidget(self.selector, 1)
+        tools.addWidget(self.selector, 2)
         refresh = QPushButton('Refresh Report')
         refresh.setObjectName('primaryButton')
         refresh.clicked.connect(self.refresh)
@@ -41,9 +47,26 @@ class ReportPage(QWidget):
         self.summary = QLabel('Select a record to view its report.')
         root.addWidget(self.summary)
         self.selector.currentIndexChanged.connect(self.refresh)
+        if self.teacher_selector is not None:
+            self.teacher_selector.currentIndexChanged.connect(self.load_teacher_subjects)
         self.load_choices()
 
     def load_choices(self):
+        if self.report_type == 'class_list':
+            try:
+                self.teacher_selector.blockSignals(True)
+                previous = self.teacher_selector.currentData()
+                self.teacher_selector.clear()
+                self.teacher_selector.addItem('Select a teacher...', None)
+                for option in reports.teacher_choices():
+                    self.teacher_selector.addItem(str(option['label']), option['id'])
+                index = self.teacher_selector.findData(previous)
+                self.teacher_selector.setCurrentIndex(index if index >= 0 else 0)
+                self.teacher_selector.blockSignals(False)
+                self.load_teacher_subjects()
+            except Exception as exc:
+                QMessageBox.critical(self, 'Report error', str(exc))
+            return
         try:
             options = (reports.student_choices() if self.report_type == 'student_report'
                        else reports.class_choices())
@@ -55,6 +78,47 @@ class ReportPage(QWidget):
             self.refresh()
         except Exception as exc:
             QMessageBox.critical(self, 'Report error', str(exc))
+
+    def load_teacher_subjects(self, *_):
+        if self.teacher_selector is None:
+            return
+        teacher_id = self.teacher_selector.currentData()
+        previous_offering = self.selector.currentData()
+        self.selector.blockSignals(True)
+        self.selector.clear()
+        self.selector.addItem('Select an assigned subject...', None)
+        try:
+            if teacher_id is not None:
+                for option in reports.teacher_subject_choices(teacher_id):
+                    self.selector.addItem(str(option['label']), option['id'])
+            index = self.selector.findData(previous_offering)
+            self.selector.setCurrentIndex(index if index >= 0 else 0)
+        except Exception as exc:
+            QMessageBox.critical(self, 'Report error', str(exc))
+        finally:
+            self.selector.blockSignals(False)
+        self.refresh()
+
+    def select_offering(self, offering_id):
+        """Allow navigation from Class Offerings to preselect teacher and subject."""
+        if self.teacher_selector is None:
+            return False
+        try:
+            teacher_id = reports.teacher_for_offering(offering_id)
+            index = self.teacher_selector.findData(teacher_id)
+            if index < 0:
+                self.load_choices()
+                index = self.teacher_selector.findData(teacher_id)
+            if index < 0:
+                return False
+            self.teacher_selector.setCurrentIndex(index)
+            offering_index = self.selector.findData(offering_id)
+            if offering_index < 0:
+                return False
+            self.selector.setCurrentIndex(offering_index)
+            return True
+        except Exception:
+            return False
 
     def _populate(self, headers, fields, records):
         self.table.clear()
@@ -70,7 +134,7 @@ class ReportPage(QWidget):
         selected = self.selector.currentData()
         if selected is None:
             self.table.setRowCount(0)
-            self.summary.setText('No records available.')
+            self.summary.setText('Select a teacher and an assigned subject to view enrolled students.' if self.report_type == 'class_list' else 'No records available.')
             return
         try:
             if self.report_type == 'class_list':

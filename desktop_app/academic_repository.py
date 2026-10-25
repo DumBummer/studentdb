@@ -148,16 +148,20 @@ def save_score(data):
     if not data.get('enrollment_id') or not data.get('component_id'):
         raise ValueError('Enrollment and component are required')
     score = Decimal(str(data.get('score', '')))
+    if not score.is_finite():
+        raise ValueError('Score must be a finite number')
     if score < 0:
         raise ValueError('Score cannot be negative')
     with get_db() as conn, conn.cursor() as cur:
-        cur.execute('''SELECT c.max_score, c.offering_id, e.offering_id AS enrolled_offering
+        cur.execute('''SELECT c.max_score, c.offering_id, e.offering_id AS enrolled_offering, e.status
                        FROM grade_component c CROSS JOIN enrollment e
                        WHERE c.component_id=%s AND e.enrollment_id=%s''',
                     (data['component_id'], data['enrollment_id']))
         component = cur.fetchone()
         if component is None:
             raise ValueError('Enrollment or grade component does not exist')
+        if str(component['status']).lower() != 'enrolled':
+            raise ValueError('Student is not currently enrolled in this class')
         if component['offering_id'] != component['enrolled_offering']:
             raise ValueError('Grade component belongs to a different class offering')
         if score > Decimal(str(component['max_score'])):
@@ -389,3 +393,98 @@ def calculate_period_grade(enrollment_id, period_id):
                      college_grade_point(overall) if overall is not None else None,
                      enrollment_id))
         return percentage
+
+
+# Component Score: subject-specific offerings and their actual configured components.
+def component_offerings():
+    with get_db() as conn, conn.cursor() as cur:
+        cur.execute("""
+            SELECT o.offering_id, s.subject_code, s.subject_name, o.section,
+                   o.school_year, o.semester, o.class_code
+            FROM class_offering o JOIN subject s ON s.subject_id=o.subject_id
+            ORDER BY s.subject_code, o.school_year DESC, o.semester, o.section
+        """)
+        return cur.fetchall()
+
+
+def offering_components(offering_id):
+    with get_db() as conn, conn.cursor() as cur:
+        cur.execute("""
+            SELECT c.component_id, c.name, c.type, c.max_score,
+                   gp.period_id, gp.name AS period_name
+            FROM grade_component c
+            JOIN grading_period gp ON gp.period_id=c.grading_period_id
+            WHERE c.offering_id=%s
+            ORDER BY CASE WHEN LOWER(gp.name)='midterm' THEN 0 ELSE 1 END,
+                     c.type, c.name, c.component_id
+        """, (offering_id,))
+        return cur.fetchall()
+
+
+def offering_score_grid(offering_id):
+    with get_db() as conn, conn.cursor() as cur:
+        cur.execute("""
+            SELECT e.enrollment_id, s.student_id,
+                   CONCAT_WS(' ',s.first_name,s.last_name) AS student_name,
+                   e.status
+            FROM enrollment e JOIN student s ON s.student_id=e.student_id
+            WHERE e.offering_id=%s AND LOWER(e.status)='enrolled'
+            ORDER BY s.last_name, s.first_name, s.student_id
+        """, (offering_id,))
+        students = cur.fetchall()
+        cur.execute("""
+            SELECT sc.enrollment_id, sc.component_id, sc.score, sc.score_id
+            FROM grade_component_score sc
+            JOIN enrollment e ON e.enrollment_id=sc.enrollment_id
+            JOIN grade_component c ON c.component_id=sc.component_id
+            WHERE e.offering_id=%s AND c.offering_id=%s
+        """, (offering_id, offering_id))
+        scores = {(r['enrollment_id'],r['component_id']):r for r in cur.fetchall()}
+        return students, scores
+
+
+# Subject-to-period assignments are separate from global grading period definitions.
+def subject_period_links():
+    with get_db() as conn, conn.cursor() as cur:
+        cur.execute("SELECT subject_id, period_id FROM subject_grading_period")
+        return cur.fetchall()
+
+
+def assign_subject_period(subject_id, data, record_id=None):
+    """Associate a period with a subject without duplicating shared periods."""
+    if not subject_id:
+        raise ValueError("Select a subject before saving a grading period.")
+    name = str(data.get('name') or '').strip()
+    if not name:
+        raise ValueError("Grading period name is required.")
+    with get_db() as conn, conn.cursor() as cur:
+        if record_id is not None:
+            cur.execute("SELECT period_id FROM grading_period WHERE period_id=%s", (record_id,))
+            if cur.fetchone() is None:
+                raise ValueError("The selected grading period no longer exists.")
+            period_id = record_id
+        else:
+            cur.execute("""
+                SELECT period_id FROM grading_period
+                WHERE lower(trim(name))=lower(trim(%s))
+                  AND school_year IS NOT DISTINCT FROM %s
+                  AND semester IS NOT DISTINCT FROM %s
+                ORDER BY period_id LIMIT 1
+            """, (name, data.get('school_year') or None, data.get('semester') or None))
+            existing = cur.fetchone()
+            if existing:
+                period_id = existing['period_id']
+            else:
+                period_id = str(uuid4())
+                cur.execute("""
+                    INSERT INTO grading_period
+                        (period_id, name, start_date, end_date, school_year, semester)
+                    VALUES (%s,%s,%s,%s,%s,%s)
+                """, (period_id, name, data.get('start_date') or None,
+                      data.get('end_date') or None, data.get('school_year') or None,
+                      data.get('semester') or None))
+        cur.execute("""
+            INSERT INTO subject_grading_period(subject_id, period_id)
+            VALUES (%s,%s) ON CONFLICT DO NOTHING
+        """, (subject_id, period_id))
+    return period_id

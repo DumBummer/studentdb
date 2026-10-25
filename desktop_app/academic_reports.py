@@ -13,6 +13,42 @@ def class_choices():
         return cur.fetchall()
 
 
+def teacher_choices():
+    """Teachers who have at least one class offering."""
+    with get_db() as conn, conn.cursor() as cur:
+        cur.execute("""
+            SELECT DISTINCT t.teacher_id AS id,
+                   t.teacher_id || ' - ' || t.first_name || ' ' || t.last_name AS label
+            FROM teacher t
+            JOIN class_offering co ON co.teacher_id = t.teacher_id
+            ORDER BY label
+        """)
+        return cur.fetchall()
+
+
+def teacher_subject_choices(teacher_id):
+    """Each choice is a specific offering to avoid combining different sections."""
+    with get_db() as conn, conn.cursor() as cur:
+        cur.execute("""
+            SELECT co.offering_id AS id,
+                   s.subject_code || ' - ' || s.subject_name ||
+                   ' | Section ' || COALESCE(NULLIF(co.section, ''), '-') ||
+                   ' | ' || co.class_code AS label
+            FROM class_offering co
+            JOIN subject s ON s.subject_id = co.subject_id
+            WHERE co.teacher_id = %s
+            ORDER BY s.subject_code, co.section, co.class_code
+        """, (teacher_id,))
+        return cur.fetchall()
+
+
+def teacher_for_offering(offering_id):
+    with get_db() as conn, conn.cursor() as cur:
+        cur.execute('SELECT teacher_id FROM class_offering WHERE offering_id = %s', (offering_id,))
+        row = cur.fetchone()
+        return row['teacher_id'] if row else None
+
+
 def student_choices():
     with get_db() as conn, conn.cursor() as cur:
         cur.execute("""
